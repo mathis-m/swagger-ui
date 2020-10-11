@@ -60,5 +60,39 @@ describe("Straighten sample generation", () => {
         })
       })
     })
+
+    describe("Case object schema type", () => {
+      describe("Override example", () => {
+        const exampleOverride = { test: "This has been overridden!" }
+        const expectToBeOverridden = (res) => expectToBe(res, exampleOverride)
+
+        it("should use override example over generated sample of schema.", () => {
+          // Given
+          const res = getSampleSchema({
+            type: "object",
+            properties: {
+              test: {
+                type: "string"
+              }
+            }
+          }, contentType, {}, exampleOverride)
+
+          // Then
+          expectToBeOverridden(res)
+        })
+        it("should use override example over schema's example.", () => {
+          // Given
+          const res = getSampleSchema({
+            type: "object",
+            example: {
+              test: "Should be overridden!"
+            }
+          }, contentType, {}, exampleOverride)
+
+          // Then
+          expectToBeOverridden(res)
+        })
+      })
+    })
   })
 })
