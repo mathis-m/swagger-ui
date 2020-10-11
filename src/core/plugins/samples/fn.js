@@ -31,17 +31,20 @@ const primitive = (schema) => {
 }
 
 
-export const sampleFromSchema = (schema, config={}) => {
+export const sampleFromSchema = (schema, config={}, exampleOverride = undefined) => {
   let { type, example, properties, additionalProperties, items } = objectify(schema)
   let { includeReadOnly, includeWriteOnly } = config
 
-
+  const sanitizeExample = (exampleObj) => deeplyStripKey(exampleObj, "$$ref", (val) => {
+    // do a couple of quick sanity tests to ensure the value
+    // looks like a $$ref that swagger-client generates.
+    return typeof val === "string" && val.indexOf("#") > -1
+  })
+  if(exampleOverride !== undefined){
+    return sanitizeExample(exampleOverride)
+  }
   if(example !== undefined) {
-    return deeplyStripKey(example, "$$ref", (val) => {
-      // do a couple of quick sanity tests to ensure the value
-      // looks like a $$ref that swagger-client generates.
-      return typeof val === "string" && val.indexOf("#") > -1
-    })
+    return sanitizeExample(example)
   }
 
   if(!type) {
