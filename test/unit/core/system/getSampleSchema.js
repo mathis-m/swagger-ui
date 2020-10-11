@@ -108,6 +108,25 @@ describe("Straighten sample generation", () => {
           expectToBeExample(res)
         })
       })
+      describe("Generated schema's sample", () => {
+        const objectSchemaDefault = {test: "string"}
+        const expectToBeObjectDefault = (res) => expectToBe(res, objectSchemaDefault)
+
+        it("should be generated when no override and no example provided", () => {
+          // Given
+          const res = getSampleSchema({
+            properties: {
+              test: {
+                type: "string"
+              }
+            },
+            type: "string"
+          }, contentType)
+
+          // Then
+          expectToBeObjectDefault(res)
+        })
+      })
     })
   })
 })
