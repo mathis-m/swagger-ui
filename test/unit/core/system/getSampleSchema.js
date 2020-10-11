@@ -5,7 +5,7 @@ import {
 describe("Straighten sample generation", () => {
   describe("Json sample generator", () => {
     const contentType = "json"
-    const expectToBe= (res, value) => expect(res).toEqual(JSON.stringify(value))
+    const expectToBe = (res, value) => expect(res).toEqual(JSON.stringify(value))
 
     describe("Case primitive schema type", () => {
       describe("Override example", () => {
@@ -23,7 +23,7 @@ describe("Straighten sample generation", () => {
           // Given
           const res = getSampleSchema({
             example: "schema example to override",
-            type: "string"
+            type: "string",
           }, contentType, {}, exampleOverride)
 
           // Then
@@ -38,7 +38,7 @@ describe("Straighten sample generation", () => {
           // Given
           const res = getSampleSchema({
             example: exampleValue,
-            type: "string"
+            type: "string",
           }, contentType)
 
           // Then
@@ -52,7 +52,7 @@ describe("Straighten sample generation", () => {
         it("should be generated when no override and no example provided", () => {
           // Given
           const res = getSampleSchema({
-            type: "string"
+            type: "string",
           }, contentType)
 
           // Then
@@ -72,9 +72,9 @@ describe("Straighten sample generation", () => {
             type: "object",
             properties: {
               test: {
-                type: "string"
-              }
-            }
+                type: "string",
+              },
+            },
           }, contentType, {}, exampleOverride)
 
           // Then
@@ -85,8 +85,8 @@ describe("Straighten sample generation", () => {
           const res = getSampleSchema({
             type: "object",
             example: {
-              test: "Should be overridden!"
-            }
+              test: "Should be overridden!",
+            },
           }, contentType, {}, exampleOverride)
 
           // Then
@@ -94,14 +94,14 @@ describe("Straighten sample generation", () => {
         })
       })
       describe("Schema's Example", () => {
-        const exampleValue = {test: "test"}
+        const exampleValue = { test: "test" }
         const expectToBeExample = (res) => expectToBe(res, exampleValue)
 
         it("should use schema's example over generated sample of schema.", () => {
           // Given
           const res = getSampleSchema({
             example: exampleValue,
-            type: "string"
+            type: "string",
           }, contentType)
 
           // Then
@@ -109,7 +109,7 @@ describe("Straighten sample generation", () => {
         })
       })
       describe("Generated schema's sample", () => {
-        const objectSchemaDefault = {test: "string"}
+        const objectSchemaDefault = { test: "string" }
         const expectToBeObjectDefault = (res) => expectToBe(res, objectSchemaDefault)
 
         it("should be generated when no override and no example provided", () => {
@@ -117,10 +117,10 @@ describe("Straighten sample generation", () => {
           const res = getSampleSchema({
             properties: {
               test: {
-                type: "string"
-              }
+                type: "string",
+              },
             },
-            type: "string"
+            type: "string",
           }, contentType)
 
           // Then
