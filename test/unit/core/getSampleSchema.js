@@ -6,6 +6,7 @@ describe("Straighten sample generation", () => {
   describe("Json sample generator", () => {
     const contentType = "json"
     const expectToBe = (res, value) => expect(res).toEqual(JSON.stringify(value))
+    const expectToBeWithAntiStringify = (res, value) => expect(JSON.parse(res)).toEqual(value)
 
     describe("Case primitive schema type", () => {
       describe("Override example", () => {
@@ -64,7 +65,7 @@ describe("Straighten sample generation", () => {
     describe("Case object schema type", () => {
       describe("Override example", () => {
         const exampleOverride = { test: "This has been overridden!" }
-        const expectToBeOverridden = (res) => expectToBe(res, exampleOverride)
+        const expectToBeOverridden = (res) => expectToBeWithAntiStringify(res, exampleOverride)
 
         it("should use override example over generated sample of schema.", () => {
           // Given
@@ -95,13 +96,13 @@ describe("Straighten sample generation", () => {
       })
       describe("Schema's Example", () => {
         const exampleValue = { test: "test" }
-        const expectToBeExample = (res) => expectToBe(res, exampleValue)
+        const expectToBeExample = (res) => expectToBeWithAntiStringify(res, exampleValue)
 
         it("should use schema's example over generated sample of schema.", () => {
           // Given
           const res = getSampleSchema({
             example: exampleValue,
-            type: "string",
+            type: "object",
           }, contentType)
 
           // Then
@@ -110,7 +111,7 @@ describe("Straighten sample generation", () => {
       })
       describe("Generated schema's sample", () => {
         const objectSchemaDefault = { test: "string" }
-        const expectToBeObjectDefault = (res) => expectToBe(res, objectSchemaDefault)
+        const expectToBeObjectDefault = (res) => expectToBeWithAntiStringify(res, objectSchemaDefault)
 
         it("should be generated when no override and no example provided", () => {
           // Given
@@ -120,7 +121,7 @@ describe("Straighten sample generation", () => {
                 type: "string",
               },
             },
-            type: "string",
+            type: "object",
           }, contentType)
 
           // Then
