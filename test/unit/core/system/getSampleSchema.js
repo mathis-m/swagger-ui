@@ -1,28 +1,62 @@
+import {
+  getSampleSchema,
+} from "core/utils"
+
 describe("Straighten sample generation", () => {
   describe("Json sample generator", () => {
+    const contentType = "json"
+    const expectToBe= (res, value) => expect(res).toEqual(JSON.stringify(value))
+
     describe("Case primitive schema type", () => {
       describe("Override example", () => {
-        it("should use override example if exists.", () => {
+        const exampleOverride = "This has been overridden!"
+        const expectToBeOverridden = (res) => expectToBe(res, exampleOverride)
 
+        it("should use override example over generated sample of schema.", () => {
+          // Given
+          const res = getSampleSchema({ type: "string" }, contentType, {}, exampleOverride)
+
+          // Then
+          expectToBeOverridden(res)
         })
         it("should use override example over schema's example.", () => {
+          // Given
+          const res = getSampleSchema({
+            example: "schema example to override",
+            type: "string",
+          }, contentType, {}, exampleOverride)
 
-        })
-        it("should use override example over generated sample of schema.", () => {
-
+          // Then
+          expectToBeOverridden(res)
         })
       })
       describe("Schema's Example", () => {
-        it("should be used if exists", () => {
+        const exampleValue = "test"
+        const expectToBeExample = (res) => expectToBe(res, exampleValue)
 
-        })
         it("should use schema's example over generated sample of schema.", () => {
+          // Given
+          const res = getSampleSchema({
+            example: exampleValue,
+            type: "string",
+          }, contentType)
 
+          // Then
+          expectToBeExample(res)
         })
       })
       describe("Generated schema's sample", () => {
-        it("should be generated when no override and no example provided", () => {
+        const stringSchemaDefault = "string"
+        const expectToBeStringDefault = (res) => expectToBe(res, stringSchemaDefault)
 
+        it("should be generated when no override and no example provided", () => {
+          // Given
+          const res = getSampleSchema({
+            type: "string",
+          }, contentType)
+
+          // Then
+          expectToBeStringDefault(res)
         })
       })
     })
