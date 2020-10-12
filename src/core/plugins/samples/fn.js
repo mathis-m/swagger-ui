@@ -32,11 +32,13 @@ const primitive = (schema) => {
 
 
 export const sampleFromSchema = (schema, config={}, exampleOverride = undefined) => {
-  let { type, example, properties, additionalProperties, items } = objectify(schema)
+  let objectifySchema = objectify(schema)
+  let defaultValue = objectifySchema.default
+  let { type, example, properties, additionalProperties, items } = objectifySchema
   let { includeReadOnly, includeWriteOnly } = config
 
   const sanitizeExample = (exampleObj) => deeplyStripKey(exampleObj, "$$ref", (val) => {
-    // do a couple of quick sanity tests to ensure the value
+    // do a couple of quick sanity tests to ensure the example
     // looks like a $$ref that swagger-client generates.
     return typeof val === "string" && val.indexOf("#") > -1
   })
@@ -44,7 +46,7 @@ export const sampleFromSchema = (schema, config={}, exampleOverride = undefined)
     return sanitizeExample(exampleOverride)
   }
   if(example !== undefined) {
-    return sanitizeExample(example)
+    example = sanitizeExample(example)
   }
 
   if(!type) {
@@ -60,7 +62,14 @@ export const sampleFromSchema = (schema, config={}, exampleOverride = undefined)
   if(type === "object") {
     let props = objectify(properties)
     let obj = {}
-    for (var name in props) {
+    if(example === null)
+      return null
+    example = example || {}
+
+    for (let name in props) {
+      if (!props.hasOwnProperty(name)) {
+        continue
+      }
       if ( props[name] && props[name].deprecated ) {
         continue
       }
@@ -69,6 +78,9 @@ export const sampleFromSchema = (schema, config={}, exampleOverride = undefined)
       }
       if ( props[name] && props[name].writeOnly && !includeWriteOnly ) {
         continue
+      }
+      if(props[name].example === undefined && example[name] !== undefined) {
+        props[name].example = example[name]
       }
       obj[name] = sampleFromSchema(props[name], config)
     }
@@ -87,15 +99,43 @@ export const sampleFromSchema = (schema, config={}, exampleOverride = undefined)
   }
 
   if(type === "array") {
+    if(example === null)
+      return null
+    let exampleOrDefault = []
+
+    if (Array.isArray(example)) {
+      exampleOrDefault = example.map((v)=>{
+        items.example = v
+        return sampleFromSchema(items, config)
+      })
+    } else if (Array.isArray(defaultValue)) {
+      exampleOrDefault = defaultValue.map((v)=>{
+        items.default = v
+        return sampleFromSchema(items, config)
+      })
+    } else if(example !== undefined) {
+      items.example = example
+      return sampleFromSchema(items, config)
+    } else if(defaultValue !== undefined) {
+      items.default = defaultValue
+      return sampleFromSchema(items, config)
+    }
+
     if(Array.isArray(items.anyOf)) {
-      return items.anyOf.map(i => sampleFromSchema(i, config))
+      return [
+        ...exampleOrDefault,
+        ...items.anyOf.map(i => sampleFromSchema(i, config))
+      ]
+    } else if(Array.isArray(items.oneOf)) {
+      return [
+        ...exampleOrDefault,
+        ...items.oneOf.map(i => sampleFromSchema(i, config))
+      ]
+    } else if(exampleOrDefault.length > 0) {
+      return exampleOrDefault
+    } else {
+      return [ sampleFromSchema(items, config) ]
     }
-
-    if(Array.isArray(items.oneOf)) {
-      return items.oneOf.map(i => sampleFromSchema(i, config))
-    }
-
-    return [ sampleFromSchema(items, config) ]
   }
 
   if(schema["enum"]) {
@@ -103,12 +143,21 @@ export const sampleFromSchema = (schema, config={}, exampleOverride = undefined)
       return schema["default"]
     return normalizeArray(schema["enum"])[0]
   }
+  let exampleOrDefault
+  if (example !== undefined) {
+    exampleOrDefault = example
+  } else if (defaultValue !== undefined) {
+    //display example if exists
+    exampleOrDefault = defaultValue
+  }
 
-  if (type === "file") {
+  if (type === "file" && !exampleOrDefault) {
     return
   }
 
-  return primitive(schema)
+  return exampleOrDefault !== undefined
+    ? exampleOrDefault
+    : primitive(schema)
 }
 
 export const inferSchema = (thing) => {
