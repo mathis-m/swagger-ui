@@ -96,12 +96,21 @@ describe("Straighten sample generation", () => {
       })
       describe("Schema's Example", () => {
         const exampleValue = { test: "test" }
-        const expectToBeExample = (res) => expectToBeWithAntiStringify(res, exampleValue)
+        const expected = { test: "test", some: "string" }
+        const expectToBeExample = (res) => expectToBeWithAntiStringify(res, expected)
 
-        it("should use schema's example over generated sample of schema.", () => {
+        it("should use schema's example merged with generated schema's sample.", () => {
           // Given
           const res = getSampleSchema({
             example: exampleValue,
+            properties: {
+              test: {
+                type: "string",
+              },
+              some: {
+                type: "string"
+              }
+            },
             type: "object",
           }, contentType)
 
