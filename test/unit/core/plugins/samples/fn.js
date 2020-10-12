@@ -160,16 +160,43 @@ describe("sampleFromSchema", () => {
       }
     },
     example: {
-      value: {
-        message: "Hello, World!"
-      },
+      message: "Hello, World!",
       $$ref: "#/components/examples/WelcomeExample"
     },
     $$ref: "#/components/schemas/Welcome"
   }
 
     let expected = {
-      "value": {
+      "message": "Hello, World!"
+    }
+
+    expect(sampleFromSchema(definition, { includeWriteOnly: true })).toEqual(expected)
+  })
+
+  it("returns object without any $$ref fields at nested schema levels", function() {
+    let definition = {
+      type: "object",
+      properties: {
+        a: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+            },
+          },
+        },
+      },
+      example: {
+        a: {
+          message: "Hello, World!",
+          $$ref: "#/components/examples/WelcomeExample",
+        },
+      },
+      $$ref: "#/components/schemas/Welcome",
+    }
+
+    let expected = {
+      a: {
         "message": "Hello, World!"
       }
     }
@@ -177,60 +204,31 @@ describe("sampleFromSchema", () => {
     expect(sampleFromSchema(definition, { includeWriteOnly: true })).toEqual(expected)
   })
 
-  it("returns object without any $$ref fields at nested schema levels", function () {
+  it("returns object with any $$ref fields that appear to be user-created", function() {
     let definition = {
       type: "object",
       properties: {
-        message: {
-          type: "string"
-        }
-      },
-      example: {
-        a: {
-          value: {
-            message: "Hello, World!"
+        $$ref: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+            },
           },
-          $$ref: "#/components/examples/WelcomeExample"
-        }
-      },
-      $$ref: "#/components/schemas/Welcome"
-    }
-
-    let expected = {
-      a: {
-        "value": {
-          "message": "Hello, World!"
-        }
-      }
-    }
-
-    expect(sampleFromSchema(definition, { includeWriteOnly: true })).toEqual(expected)
-  })
-
-  it("returns object with any $$ref fields that appear to be user-created", function () {
-    let definition = {
-      type: "object",
-      properties: {
-        message: {
-          type: "string"
-        }
+        },
       },
       example: {
         $$ref: {
-          value: {
-            message: "Hello, World!"
-          },
-          $$ref: "#/components/examples/WelcomeExample"
-        }
+          message: "Hello, World!",
+          $$ref: "#/components/examples/WelcomeExample",
+        },
       },
-      $$ref: "#/components/schemas/Welcome"
+      $$ref: "#/components/schemas/Welcome",
     }
 
     let expected = {
       $$ref: {
-        "value": {
-          "message": "Hello, World!"
-        }
+        "message": "Hello, World!"
       }
     }
 
