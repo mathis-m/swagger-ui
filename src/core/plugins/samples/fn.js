@@ -38,7 +38,7 @@ export const sampleFromSchema = (schema, config={}, exampleOverride = undefined)
   let { includeReadOnly, includeWriteOnly } = config
 
   const sanitizeExample = (exampleObj) => deeplyStripKey(exampleObj, "$$ref", (val) => {
-    // do a couple of quick sanity tests to ensure the example
+    // do a couple of quick sanity tests to ensure the value
     // looks like a $$ref that swagger-client generates.
     return typeof val === "string" && val.indexOf("#") > -1
   })
