@@ -26,7 +26,7 @@ describe("#6475: 'Examples' keyword definitions can not be rendered as xml", () 
       .within(() => {
         cy
           .get("textarea")
-          .should("include.text", xmlIndicator)
+          .contains(xmlIndicator)
       })
   })
 })
@@ -53,11 +53,13 @@ describe("#6475: 'Example' keyword definitions can not be rendered as xml", () =
       .visit("?url=/documents/bugs/6475.yaml")
       .get("#operations-default-xmlTest_example")
       .click()
+      .get(".btn.try-out__btn")
+      .click()
       .get(".opblock-section-request-body")
       .within(() => {
         cy
           .get("textarea")
-          .should("include.text", xmlIndicator)
+          .contains(xmlIndicator)
       })
   })
 })
