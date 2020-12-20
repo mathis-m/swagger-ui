@@ -41,3 +41,17 @@ paths:
        '200':
          description: Simple Test xml example
          content: {}
+components:
+  schemas:
+    Test:
+      type: object
+      xml:
+        name: root
+      properties:
+        x:
+          type: string
+        other:
+          type: string
+          format: email
+      example:
+        x: what the f
