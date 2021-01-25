@@ -85,8 +85,7 @@ export default class Operations extends React.Component {
                       // selectors to the plugin system, to allow for dynamic
                       // overriding of low-level selectors that other selectors
                       // rely on. --KS, 12/17
-                      const validMethods = specSelectors.isOAS3() ?
-                            OAS3_OPERATION_METHODS : SWAGGER2_OPERATION_METHODS
+                      const validMethods = specSelectors.getValidMethods()
 
                       if(validMethods.indexOf(method) === -1) {
                         return null

@@ -5,9 +5,11 @@ import { paramToIdentifier } from "../../utils"
 
 const DEFAULT_TAG = "default"
 
-const OPERATION_METHODS = [
-  "get", "put", "post", "delete", "options", "head", "patch", "trace"
+const SWAGGER2_OPERATION_METHODS = [
+  "get", "put", "post", "delete", "options", "head", "patch"
 ]
+
+const OPERATION_METHODS = SWAGGER2_OPERATION_METHODS.concat(["trace"])
 
 const state = state => {
   return state || Map()
@@ -114,9 +116,16 @@ export const paths = createSelector(
 	spec => spec.get("paths")
 )
 
+export const getValidMethods = createSelector(
+  isOAS3,
+  (isOAS3) => isOAS3() ?
+    OPERATION_METHODS : SWAGGER2_OPERATION_METHODS
+)
+
 export const operations = createSelector(
   paths,
-  paths => {
+  getValidMethods,
+  (paths, validMethods) => {
     if(!paths || paths.size < 1)
       return List()
 
@@ -131,7 +140,7 @@ export const operations = createSelector(
         return {}
       }
       path.forEach((operation, method) => {
-        if(OPERATION_METHODS.indexOf(method) < 0) {
+        if(validMethods.indexOf(method) < 0) {
           return
         }
         list = list.push(fromJS({
