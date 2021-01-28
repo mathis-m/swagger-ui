@@ -118,7 +118,7 @@ export const paths = createSelector(
 
 export const getValidMethods = createSelector(
   isOAS3,
-  (isOAS3) => isOAS3() ?
+  (isOAS3) => isOAS3 ?
     OPERATION_METHODS : SWAGGER2_OPERATION_METHODS
 )
 
