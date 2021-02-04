@@ -5,7 +5,7 @@ import serializeError from "serialize-error"
 import isString from "lodash/isString"
 import debounce from "lodash/debounce"
 import set from "lodash/set"
-import { isJSONObject, paramToValue, isEmptyValue } from "core/utils"
+import { paramToValue, isEmptyValue } from "core/utils"
 
 // Actions conform to FSA (flux-standard-actions)
 // {type: string,payload: Any|Error, meta: obj, error: bool}
@@ -256,7 +256,7 @@ export const requestResolvedSubtree = path => system => {
   const isPathAlreadyBatched = requestBatch
     .map(arr => arr.join("@@"))
     .indexOf(path.join("@@")) > -1
-  
+
   if(isPathAlreadyBatched) {
     return
   }
@@ -376,9 +376,9 @@ export const executeRequest = (req) =>
     let { pathName, method, operation } = req
     let { requestInterceptor, responseInterceptor } = getConfigs()
 
-    
+
     let op = operation.toJS()
-    
+
     // ensure that explicitly-included params are in the request
 
     if (operation && operation.get("parameters")) {
@@ -426,9 +426,7 @@ export const executeRequest = (req) =>
       const requestBody = oas3Selectors.requestBodyValue(pathName, method)
       const requestBodyInclusionSetting = oas3Selectors.requestBodyInclusionSetting(pathName, method)
 
-      if(isJSONObject(requestBody)) {
-        req.requestBody = JSON.parse(requestBody)
-      } else if(requestBody && requestBody.toJS) {
+      if(requestBody && requestBody.toJS) {
         req.requestBody = requestBody
           .map(
             (val) => {
@@ -439,13 +437,13 @@ export const executeRequest = (req) =>
             }
           )
           .filter(
-            (value, key) => (Array.isArray(value) 
-              ? value.length !== 0 
+            (value, key) => (Array.isArray(value)
+              ? value.length !== 0
               : !isEmptyValue(value)
             ) || requestBodyInclusionSetting.get(key)
           )
           .toJS()
-      } else{
+      } else {
         req.requestBody = requestBody
       }
     }
