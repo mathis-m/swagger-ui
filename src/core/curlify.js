@@ -16,23 +16,31 @@ const extractKey = (k) => {
 }
 
 export default function curl( request ){
-  let curlified = []
+  let curlified = ""
+  const addWords = (...args) => curlified += " " + args.join(" ")
+  const addWordsWithoutLeadingSpace = (...args) => curlified += args.join(" ")
+  const addNewLine = () => curlified += " \\\n"
+  const addIndent = (level = 1) => curlified += "  ".repeat(level)
   let isMultipartFormDataRequest = false
   let headers = request.get("headers")
-  curlified.push( "curl" )
+  curlified += "curl"
 
   if (request.get("curlOptions")) {
-    curlified.push(...request.get("curlOptions"))
+    addWords(...request.get("curlOptions"))
   }
 
-  curlified.push( "-X", request.get("method") )
-  curlified.push( `"${request.get("url")}"`)
+  addWords("-X", request.get("method"))
+
+  addNewLine()
+  addIndent()
+  addWordsWithoutLeadingSpace( `"${request.get("url")}"`)
 
   if ( headers && headers.size ) {
     for( let p of request.get("headers").entries() ){
+      addNewLine()
+      addIndent()
       let [ h,v ] = p
-      curlified.push( "-H " )
-      curlified.push( `"${h}: ${v.replace(/\$/g, "\\$")}"` )
+      addWordsWithoutLeadingSpace("-H", `'${h.replace(/'/g, "'\\''")}: ${v.replace(/'/g, "'\\''")}'`)
       isMultipartFormDataRequest = isMultipartFormDataRequest || /^content-type$/i.test(h) && /^multipart\/form-data$/i.test(v)
     }
   }
@@ -40,36 +48,44 @@ export default function curl( request ){
   if ( request.get("body") ){
     if (isMultipartFormDataRequest && ["POST", "PUT", "PATCH"].includes(request.get("method"))) {
       for( let [ k,v ] of request.get("body").entrySeq()) {
-        let extractedKey = extractKey(k)
-        curlified.push( "-F" )
+        let extractedKey = extractKey(k).replace(/'/g, "'\\''")
+        addNewLine()
+        addIndent()
+        addWordsWithoutLeadingSpace("-F")
         if (v instanceof win.File) {
-          curlified.push(`"${extractedKey}=@${v.name}${v.type ? `;type=${v.type}` : ""}"` )
+          addWords(`'${extractedKey}=@${v.name.replace(/'/g, "'\\''")}${v.type ? `;type=${v.type.replace(/'/g, "'\\''")}` : ""}'`)
         } else {
-          curlified.push(`"${extractedKey}=${v}"` )
+          addWords(`'${extractedKey}=${v.replace(/'/g, "'\\''")}'`)
         }
       }
     } else {
-      curlified.push( "-d" )
+      addNewLine()
+      addIndent()
+      addWordsWithoutLeadingSpace("-d")
       let reqBody = request.get("body")
       if (!Map.isMap(reqBody)) {
-        curlified.push( JSON.stringify( request.get("body") ).replace(/\\n/g, "").replace(/\$/g, "\\$") )
+        if(typeof reqBody !== "string") {
+          reqBody = JSON.stringify(reqBody)
+        }
+        addWords(`'${reqBody.replace(/'/g, "'\\''")}'`)
       } else {
         let curlifyToJoin = []
         for (let [k, v] of request.get("body").entrySeq()) {
           let extractedKey = extractKey(k)
           if (v instanceof win.File) {
-            curlifyToJoin.push(`"${extractedKey}":{"name":"${v.name}"${v.type ? `,"type":"${v.type}"` : ""}}`)
+            curlifyToJoin.push(`  "${extractedKey}": {\n    "name": "${v.name}"${v.type ? `,\n    "type": "${v.type}"` : ""}\n  }`)
           } else {
-            curlifyToJoin.push(`"${extractedKey}":${JSON.stringify(v).replace(/\\n/g, "").replace("$", "\\$")}`)
+            curlifyToJoin.push(`  "${extractedKey}": ${JSON.stringify(v, null, 2).replace(/(\r\n|\r|\n)/g, "\n  ")}`)
           }
         }
-        curlified.push(`{${curlifyToJoin.join()}}`)
+        addWords(`'{\n${curlifyToJoin.join(",\n").replace(/'/g, "'\\''")}\n}'`)
       }
     }
   } else if(!request.get("body") && request.get("method") === "POST") {
-    curlified.push( "-d" )
-    curlified.push( "\"\"" )
+    addNewLine()
+    addIndent()
+    addWordsWithoutLeadingSpace("-d", "\"\"")
   }
 
-  return curlified.join( " " )
+  return curlified
 }
