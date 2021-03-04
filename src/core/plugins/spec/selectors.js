@@ -269,6 +269,84 @@ export const taggedOperations = (state) => ({ getConfigs }) => {
     })
 }
 
+export const hierarchicalTaggedOperations = (state) => (system) => {
+  system = system.getSystem()
+  const config = system.getConfigs()
+  const hierarchicalTagsConfig = config.hierarchicalTags || true // TODO: remove true
+  const delimiter = config.tagDelimiter || "|"
+  const filter = system.layoutSelectors.currentFilter()
+
+  let taggedOperationsMap = taggedOperations(state)(system)
+
+  if (filter) {
+    if (filter !== true && filter !== "true" && filter !== "false") {
+      taggedOperationsMap = system.fn.opsFilter(taggedOperationsMap, filter)
+    }
+  }
+
+  if(!hierarchicalTagsConfig) {
+    return taggedOperationsMap
+  }
+
+  let hierarchicalTaggedOperations = OrderedMap()
+
+  const addTagIn = (nestedTagPath, value) => {
+    value = value.set("tags", OrderedMap())
+    const visitedTags = []
+    let currentTag = nestedTagPath.shift()
+    while(currentTag !== undefined) {
+      const isRootTag = visitedTags.length === 0
+      const isNewRootTag = isRootTag && !hierarchicalTaggedOperations.has(currentTag)
+
+      if(isNewRootTag) {
+        hierarchicalTaggedOperations = hierarchicalTaggedOperations.set(
+          currentTag,
+          value
+        )
+        visitedTags.push(currentTag)
+        currentTag = nestedTagPath.shift()
+        continue
+      }
+
+      const hierarchicalUpdatePath = visitedTags
+        .reduce((acc, x) => acc.concat([x, "tags"]), [])
+      hierarchicalUpdatePath.push(currentTag)
+
+      hierarchicalTaggedOperations = hierarchicalTaggedOperations.mergeDeepIn(
+        hierarchicalUpdatePath,
+        nestedTagPath.length === 0 ? value : OrderedMap({tags: OrderedMap()})
+      )
+
+      visitedTags.push(currentTag)
+      currentTag = nestedTagPath.shift()
+    }
+  }
+
+  taggedOperationsMap.forEach((v, k) => {
+    addTagIn(k.split(delimiter), v)
+  })
+  return hierarchicalTaggedOperations
+}
+
+
+export const getHierarchicalTagsFor = (state, hierarchicalTag) => (system) => {
+  system = system.getSystem()
+  const config = system.getConfigs()
+  const delimiter = config.tagDelimiter || "|"
+  const hierarchicalTagsConfig = config.hierarchicalTags || true // TODO: remove true
+  if(!hierarchicalTagsConfig) {
+    return OrderedMap()
+  }
+
+  const nestedTagPath = hierarchicalTag.split(delimiter)
+  const hierarchicalPath = nestedTagPath
+    .reduce((acc, x) => acc.concat([x, "tags"]), [])
+  const ops = system.specSelectors
+    .hierarchicalTaggedOperations()
+  return ops
+    .getIn(hierarchicalPath, OrderedMap())
+}
+
 export const responses = createSelector(
   state,
   state => state.get( "responses", Map() )

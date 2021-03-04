@@ -1,6 +1,6 @@
 import React from "react"
 import PropTypes from "prop-types"
-import Im from "immutable"
+import Im, { OrderedMap } from "immutable"
 
 const SWAGGER2_OPERATION_METHODS = [
   "get", "put", "post", "delete", "options", "head", "patch"
@@ -22,7 +22,9 @@ export default class Operations extends React.Component {
     authActions: PropTypes.object.isRequired,
     authSelectors: PropTypes.object.isRequired,
     getConfigs: PropTypes.func.isRequired,
-    fn: PropTypes.func.isRequired
+    fn: PropTypes.func.isRequired,
+    hierarchicalLevel: PropTypes.number,
+    hierarchicalTag: PropTypes.number,
   };
 
   render() {
@@ -33,13 +35,23 @@ export default class Operations extends React.Component {
       layoutSelectors,
       layoutActions,
       getConfigs,
-      fn
+      fn,
+      hierarchicalLevel,
+      hierarchicalTag
     } = this.props
+    hierarchicalLevel = hierarchicalLevel || 1
+    const hierarchicalTagsConfig = getConfigs().hierarchicalTags || true // TODO: remove true
 
-    let taggedOps = specSelectors.taggedOperations()
+    let taggedOps = hierarchicalTagsConfig
+      ? !hierarchicalTag
+        ? specSelectors.hierarchicalTaggedOperations()
+        : specSelectors.getHierarchicalTagsFor(hierarchicalTag)
+      : specSelectors.taggedOperations()
 
+    console.log(hierarchicalTag || "root", taggedOps.toJS())
     const OperationContainer = getComponent("OperationContainer", true)
     const OperationTag = getComponent("OperationTag")
+    const Operations = getComponent("operations", true)
 
     let {
       maxDisplayedTags,
@@ -47,7 +59,7 @@ export default class Operations extends React.Component {
 
     let filter = layoutSelectors.currentFilter()
 
-    if (filter) {
+    if (filter && !hierarchicalTagsConfig) {
       if (filter !== true && filter !== "true" && filter !== "false") {
         taggedOps = fn.opsFilter(taggedOps, filter)
       }
@@ -57,11 +69,16 @@ export default class Operations extends React.Component {
       taggedOps = taggedOps.slice(0, maxDisplayedTags)
     }
 
+    const indentStyle = {
+      width: 45 * (hierarchicalLevel) + "px"
+    }
+    debugger
     return (
         <div>
           {
             taggedOps.map( (tagObj, tag) => {
-              const operations = tagObj.get("operations")
+              const operations = tagObj.get("operations", OrderedMap())
+              let hierarchicalTagPath = tagObj.getIn(["tagDetails", "name"], tag)
               return (
                 <OperationTag
                   key={"operation-" + tag}
@@ -102,14 +119,27 @@ export default class Operations extends React.Component {
                                  />
                     }).toArray()
                   }
+                  <div style={{ display: "flex" }}>
+                    {
+                      hierarchicalTagsConfig && (
+                        <div style={indentStyle}></div>
+                      )
+                    }
+                    <div style={{ flexGrow: 1 }}>
+                      <Operations
+                        key={"operations-" + hierarchicalTagPath}
+                        hierarchicalLevel={hierarchicalLevel + 1}
+                        hierarchicalTag={hierarchicalTagPath}
+                      />
+                    </div>
 
-
+                  </div>
                 </OperationTag>
               )
             }).toArray()
           }
 
-          { taggedOps.size < 1 ? <h3> No operations defined in spec! </h3> : null }
+          { hierarchicalLevel === 1 && taggedOps.size === 0 ? <h3> No operations defined in spec! </h3> : null }
         </div>
     )
   }
