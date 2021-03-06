@@ -2,32 +2,39 @@ import { taggedOperations } from "../../spec/selectors"
 import { OrderedMap } from "immutable"
 
 export const hierarchicalTaggedOperations = (state) => (system) => {
-  system = system.getSystem()
-  const delimiter = system.hierarchicalTagsSelectors.getTagDelimiter()
-  const filter = system.layoutSelectors.currentFilter()
+  const {
+    hierarchicalTagsSelectors,
+    layoutSelectors,
+    fn
+  } = system = system.getSystem()
+  const delimiter = hierarchicalTagsSelectors.getTagDelimiter()
+  const filter = layoutSelectors.currentFilter()
 
   let taggedOperationsMap = taggedOperations(state)(system)
 
   if (filter) {
     if (filter !== true && filter !== "true" && filter !== "false") {
-      taggedOperationsMap = system.fn.opsFilter(taggedOperationsMap, filter)
+      taggedOperationsMap = fn.opsFilter(taggedOperationsMap, filter)
     }
   }
 
   let hierarchicalTaggedOperations = OrderedMap()
 
-  const addTagIn = (nestedTagPath, value) => {
-    value = value.set("tags", OrderedMap())
+  const addTagIn = (nestedTagPath, targetValue) => {
+    targetValue = targetValue.set("tags", OrderedMap())
     const visitedTags = []
     let currentTag = nestedTagPath.shift()
     while(currentTag !== undefined) {
+      const isTargetTag = nestedTagPath.length === 0
       const isRootTag = visitedTags.length === 0
       const isNewRootTag = isRootTag && !hierarchicalTaggedOperations.has(currentTag)
+
+      const newTagValue = isTargetTag ? targetValue : OrderedMap({tags: OrderedMap()})
 
       if(isNewRootTag) {
         hierarchicalTaggedOperations = hierarchicalTaggedOperations.set(
           currentTag,
-          value
+          newTagValue
         )
         visitedTags.push(currentTag)
         currentTag = nestedTagPath.shift()
@@ -40,7 +47,7 @@ export const hierarchicalTaggedOperations = (state) => (system) => {
 
       hierarchicalTaggedOperations = hierarchicalTaggedOperations.mergeDeepIn(
         hierarchicalUpdatePath,
-        nestedTagPath.length === 0 ? value : OrderedMap({tags: OrderedMap()})
+        newTagValue
       )
 
       visitedTags.push(currentTag)
