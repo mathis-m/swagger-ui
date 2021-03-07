@@ -28,6 +28,7 @@ export default class HierarchicalOperationTag extends React.Component {
     oas3Selectors: PropTypes.func.isRequired,
     layoutSelectors: PropTypes.object.isRequired,
     layoutActions: PropTypes.object.isRequired,
+    specSelectors: PropTypes.object.isRequired,
 
     getConfigs: PropTypes.func.isRequired,
     getComponent: PropTypes.func.isRequired,
@@ -36,15 +37,15 @@ export default class HierarchicalOperationTag extends React.Component {
   }
 
   constructor(props) {
-    super(props);
-    this.render = this.render.bind(this);
-    this.renderChildTags = this.renderChildTags.bind(this);
+    super(props)
+    this.render = this.render.bind(this)
+    this.renderChildTags = this.renderChildTags.bind(this)
   }
 
   render() {
     // If this is the root element, just render the child tags
     if (this.props.isRoot) {
-      return this.renderChildTags();
+      return this.renderChildTags()
     }
 
     // Otherwise, we're rendering the individual elements, so proceed with full render
@@ -78,13 +79,13 @@ export default class HierarchicalOperationTag extends React.Component {
     // Set up some helpers
     const isDeepLinkingEnabled = deepLinking && deepLinking !== "false"
 
-    const tagDescription = tagObj ? tagObj.getIn(["tagDetails", "description"], null) : null;
-    const tagExternalDocsDescription = tagObj ? tagObj.getIn(["tagDetails", "externalDocs", "description"]) : null;
-    const rawTagExternalDocsUrl = tagObj ? tagObj.getIn(["tagDetails", "externalDocs", "url"]) : null;
+    const tagDescription = tagObj ? tagObj.getIn(["tagDetails", "description"], null) : null
+    const tagExternalDocsDescription = tagObj ? tagObj.getIn(["tagDetails", "externalDocs", "description"]) : null
+    const rawTagExternalDocsUrl = tagObj ? tagObj.getIn(["tagDetails", "externalDocs", "url"]) : null
     const tagExternalDocsUrl = (isFunc(oas3Selectors) && isFunc(oas3Selectors.selectedServer))
       ? buildUrl(rawTagExternalDocsUrl, specUrl, { selectedServer: oas3Selectors.selectedServer() })
-      : rawTagExternalDocsUrl;
-    const operations = tagObj ? tagObj.get("operations") : Im.fromJS({});
+      : rawTagExternalDocsUrl
+    const operations = tagObj ? tagObj.get("operations") : Im.fromJS({})
 
     const isShownKey = ["operations-tag", tag]
     const showTag = layoutSelectors.isShown(isShownKey, docExpansion === "full" || docExpansion === "list")
@@ -178,9 +179,9 @@ export default class HierarchicalOperationTag extends React.Component {
   }
 
   renderChildTags() {
-    const { childTags } = this.props;
+    const { childTags } = this.props
     if (!childTags || childTags.size === 0) {
-      return null;
+      return null
     }
 
     const {
@@ -191,7 +192,7 @@ export default class HierarchicalOperationTag extends React.Component {
       getComponent,
       specSelectors,
       isRoot,
-    } = this.props;
+    } = this.props
 
     return (
       <div className="hierarchical-operation-tags" style={isRoot ? null : {margin: "0 0 0 2rem"}}>

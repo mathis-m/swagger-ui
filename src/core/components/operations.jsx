@@ -40,10 +40,10 @@ export default class Operations extends React.Component {
       maxDisplayedTags,
       hierarchicalTags,
       tagSplitterChar,
-    } = getConfigs();
+    } = getConfigs()
 
     // Set default tagSplitterChar if necessary
-    tagSplitterChar = tagSplitterChar || /[:|]/;
+    tagSplitterChar = tagSplitterChar || /[:|]/
 
     // Get a flat map of tag names to tag info and operations. Note that this will always return a
     // flat list, even if the `hierarchicalTags` option is set to `true`.
@@ -77,19 +77,19 @@ export default class Operations extends React.Component {
       // }
       // TODO: Explicitly define TagInfoAndOperations
 
-      const operationTagsRaw = {};
+      const operationTagsRaw = {}
 
       // For each raw tag....
       taggedOps.map((tagObj, tagName) => {
         // Split the raw tag name into parts
-        const parts = tagName.split(tagSplitterChar);
+        const parts = tagName.split(tagSplitterChar)
 
         // Set a pointer for use in traversing the hierarchy
-        let current = operationTagsRaw;
+        let current = operationTagsRaw
 
         // Iterate through the parts defined by this tag
         for (let i = 0; i < parts.length; i++) {
-          const part = parts[i];
+          const part = parts[i]
 
           // If there's no object defined for the current part, define one with just childTags as an
           // empty set
@@ -98,7 +98,7 @@ export default class Operations extends React.Component {
             const canonicalName = parts.reduce(
               (name, p, j) => ((j > i) ? name : name.concat([p])),
               []
-            ).join("|");
+            ).join("|")
             current[part] = {
               canonicalName,
               data: null,
@@ -108,16 +108,16 @@ export default class Operations extends React.Component {
 
           // If this is the last part, set data on this object
           if (i === parts.length - 1) {
-            current[part].data = tagObj;
+            current[part].data = tagObj
           }
 
           // Move to the next level of the hierarchy before looping around
-          current = current[part].childTags;
+          current = current[part].childTags
         }
-      });
+      })
 
       // Convert to immutable map
-      const operationTags = Im.fromJS(operationTagsRaw);
+      const operationTags = Im.fromJS(operationTagsRaw)
       const HierarchicalOperationTag = getComponent("HierarchicalOperationTag")
       return operationTags.size === 0
         ? <h3> No operations defined in spec!</h3>
